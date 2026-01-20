@@ -8,22 +8,27 @@ export default function Home() {
   const [upiId, setUpiId] = useState("");
   const [risk, setRisk] = useState<RiskLevel>(null);
 
-  const assessRisk = () => {
-    const value = upiId.toLowerCase();
+  const assessRisk = async () => {
+  if (!upiId) {
+    setRisk(null);
+    return;
+  }
 
-    if (!value) {
-      setRisk(null);
-      return;
-    }
+  try {
+    const res = await fetch("/api/check-risk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ upiId }),
+    });
 
-    if (value.includes("fraud") || value.includes("test")) {
-      setRisk("HIGH");
-    } else if (value.length < 10) {
-      setRisk("MEDIUM");
-    } else {
-      setRisk("LOW");
-    }
-  };
+    const data = await res.json();
+    setRisk(data.risk);
+  } catch (error) {
+    console.error("Risk API error:", error);
+    setRisk(null);
+  }
+};
+
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
